@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+from datetime import datetime
 from pathlib import Path
 
 import websockets
@@ -14,6 +15,8 @@ load_dotenv()
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY", "")
 GEMINI_WS_URL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.BidiGenerateContent"
 CHARACTERS_DIR = Path(__file__).parent / "characters"
+TRANSCRIPTS_DIR = Path(__file__).parent / "transcripts"
+TRANSCRIPTS_DIR.mkdir(exist_ok=True)
 
 app = FastAPI()
 
@@ -69,6 +72,23 @@ async def websocket_proxy(ws: WebSocket, character_id: str):
 
     gemini_ws_url = f"{GEMINI_WS_URL}?key={GOOGLE_API_KEY}"
 
+    # Transcript state for this session
+    session_start = datetime.now()
+    transcript_file = TRANSCRIPTS_DIR / f"{character_id}_{session_start.strftime('%Y%m%d_%H%M%S')}.txt"
+    transcript_lines: list[str] = []
+    last_saved_index = 0
+
+    def save_transcript():
+        nonlocal last_saved_index
+        if last_saved_index >= len(transcript_lines):
+            return
+        with open(transcript_file, "a") as f:
+            if last_saved_index == 0:
+                f.write(f"=== {character['name']} — {session_start.strftime('%Y-%m-%d %H:%M:%S')} ===\n\n")
+            for line in transcript_lines[last_saved_index:]:
+                f.write(line + "\n")
+        last_saved_index = len(transcript_lines)
+
     try:
         async with websockets.connect(gemini_ws_url) as gemini_ws:
             # Send setup message
@@ -100,28 +120,63 @@ async def websocket_proxy(ws: WebSocket, character_id: str):
             async def gemini_to_browser():
                 try:
                     async for message in gemini_ws:
-                        await ws.send_text(message if isinstance(message, str) else message.decode())
+                        text = message if isinstance(message, str) else message.decode()
+                        # Extract transcriptions before forwarding
+                        try:
+                            msg = json.loads(text)
+                            sc = msg.get("serverContent", {})
+                            out = sc.get("outputTranscription", {}).get("text", "")
+                            inp = sc.get("inputTranscription", {}).get("text", "")
+                            if out.strip():
+                                ts = datetime.now().strftime("%H:%M:%S")
+                                line = f"[{ts}] AI: {out.strip()}"
+                                print(f"[{character_id}] {line}")
+                                transcript_lines.append(line)
+                            if inp.strip():
+                                ts = datetime.now().strftime("%H:%M:%S")
+                                line = f"[{ts}] User: {inp.strip()}"
+                                print(f"[{character_id}] {line}")
+                                transcript_lines.append(line)
+                        except (json.JSONDecodeError, AttributeError):
+                            pass
+                        await ws.send_text(text)
                 except websockets.exceptions.ConnectionClosed as e:
                     print(f"[{character_id}] Gemini disconnected: code={e.code} reason={e.reason}")
                 except Exception as e:
                     print(f"[{character_id}] gemini→browser error: {e}")
 
-            # Run both forwarding tasks concurrently
+            async def periodic_save():
+                try:
+                    while True:
+                        await asyncio.sleep(30)
+                        if transcript_lines[last_saved_index:]:
+                            save_transcript()
+                            print(f"[{character_id}] Transcript saved ({len(transcript_lines)} lines)")
+                except asyncio.CancelledError:
+                    pass
+
+            # Run forwarding tasks + periodic save concurrently
             done, pending = await asyncio.wait(
                 [
                     asyncio.create_task(browser_to_gemini()),
                     asyncio.create_task(gemini_to_browser()),
+                    asyncio.create_task(periodic_save()),
                 ],
                 return_when=asyncio.FIRST_COMPLETED,
             )
 
-            # Cancel the remaining task
+            # Cancel remaining tasks
             for task in pending:
                 task.cancel()
                 try:
                     await task
                 except asyncio.CancelledError:
                     pass
+
+            # Final save on session end
+            save_transcript()
+            if transcript_lines:
+                print(f"[{character_id}] Final transcript saved to {transcript_file.name} ({len(transcript_lines)} lines)")
 
     except websockets.exceptions.InvalidStatusCode as e:
         print(f"[{character_id}] Gemini connection refused: {e}")
