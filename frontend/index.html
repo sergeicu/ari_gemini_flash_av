@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Human</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Screen 1: Character Selection -->
+    <div id="select-screen">
+        <h1>AI Human</h1>
+        <p>Choose a character</p>
+        <div id="character-list">
+            <!-- Populated by JS from /api/characters -->
+        </div>
+    </div>
+
+    <!-- Screen 2: Conversation (hidden initially) -->
+    <div id="conversation-screen" style="display:none;">
+        <video id="camera-preview" autoplay playsinline muted></video>
+
+        <!-- Status indicator -->
+        <div id="status-indicator" class="overlay">
+            <div id="ai-speaking-dot"></div>
+            <span id="status-text">Connecting...</span>
+        </div>
+
+        <!-- Transcript -->
+        <div id="transcript" class="overlay"></div>
+
+        <!-- End button -->
+        <button id="end-btn" class="overlay" onclick="endConversation()">End</button>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

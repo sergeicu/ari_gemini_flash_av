@@ -1,0 +1,180 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #111;
+    color: #fff;
+}
+
+/* ---------- Character Selection Screen ---------- */
+#select-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+    box-sizing: border-box;
+}
+
+#select-screen h1 {
+    font-size: 2rem;
+    margin: 0 0 4px;
+}
+
+#select-screen p {
+    margin: 0 0 32px;
+    opacity: 0.7;
+    font-size: 1rem;
+}
+
+#character-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.character-card {
+    background: #222;
+    border: 2px solid #333;
+    border-radius: 16px;
+    padding: 24px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.1s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.character-card:active {
+    transform: scale(0.97);
+}
+
+.character-card:hover {
+    border-color: #666;
+}
+
+.character-card h2 {
+    margin: 0 0 8px;
+    font-size: 1.3rem;
+}
+
+.character-card p {
+    margin: 0;
+    opacity: 0.7;
+    font-size: 0.95rem;
+}
+
+/* ---------- Conversation Screen ---------- */
+#conversation-screen {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+#camera-preview {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+}
+
+.overlay {
+    position: fixed;
+    z-index: 10;
+}
+
+/* ---------- Status Indicator ---------- */
+#status-indicator {
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0, 0, 0, 0.6);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+#ai-speaking-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #4caf50;
+    transition: background 0.3s;
+}
+
+#ai-speaking-dot.speaking {
+    animation: pulse 0.8s ease-in-out infinite;
+    background: #ff9800;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.7; }
+}
+
+/* ---------- Transcript ---------- */
+#transcript {
+    bottom: 80px;
+    left: 16px;
+    right: 16px;
+    max-height: 30vh;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    display: none;
+}
+
+#transcript.has-content {
+    display: block;
+}
+
+.transcript-line {
+    margin-bottom: 6px;
+}
+
+.transcript-line .speaker {
+    font-weight: 600;
+    margin-right: 6px;
+}
+
+.transcript-line .speaker.you {
+    color: #90caf9;
+}
+
+.transcript-line .speaker.ai {
+    color: #a5d6a7;
+}
+
+/* ---------- End Button ---------- */
+#end-btn {
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 32px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #fff;
+    background: rgba(244, 67, 54, 0.8);
+    border: none;
+    border-radius: 24px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#end-btn:active {
+    background: rgba(244, 67, 54, 1);
+}
