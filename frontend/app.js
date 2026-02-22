@@ -168,6 +168,13 @@ function endConversation() {
 // ============================================================
 
 async function startMediaCapture() {
+    // getUserMedia requires a secure context (HTTPS or localhost)
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        statusText.textContent = "Camera/mic requires HTTPS or localhost. Please open http://localhost:8000";
+        console.error("navigator.mediaDevices unavailable — page not in a secure context. Use https:// or http://localhost");
+        return;
+    }
+
     try {
         // Request both permissions in a single getUserMedia call
         const combinedStream = await navigator.mediaDevices.getUserMedia({
