@@ -1,8 +1,11 @@
 [build]
 cmds = [
-  "pip install -r requirements.txt",
-  "echo 'Build complete'"
+  "pip install -r requirements.txt"
 ]
 
+[[phases]]
+name = "setup"
+cmds = ["chmod +x ./start.sh"]
+
 [start]
-cmd = "bash start.sh"
+cmd = "bash ./start.sh"
